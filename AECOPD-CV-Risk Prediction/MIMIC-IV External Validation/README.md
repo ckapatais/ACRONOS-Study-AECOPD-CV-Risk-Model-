@@ -161,6 +161,122 @@ The internal model directory must contain:
 
 ---
 
+# MIMIC-IV Sensitivity Analysis: Alternative Median Imputation of Missing Laboratory Predictors
+
+## Script Name
+
+`mimiciv_imputation_sensitivity_6h_github_zenodo.py`
+
+## Purpose
+
+This script was added to provide a fully reproducible sensitivity analysis evaluating whether the external-validation performance of the AECOPD-CV model in MIMIC-IV was materially dependent on the specific median values used to replace missing laboratory predictors.
+
+The primary MIMIC-IV external-validation analysis used fixed median-imputation values derived from the original model-development cohort. Because availability of pH, urea, and lactate was incomplete within the early admission window, and because the distributions of these laboratory variables differed between the development and external-validation cohorts, an additional sensitivity analysis was performed using medians estimated directly from the observed MIMIC-IV laboratory measurements available within the first 6 hours of hospital admission.
+
+The purpose of this analysis was not to develop or optimise a new prediction model. Instead, it was designed to determine whether the observed external-validation performance was sensitive to the particular fixed laboratory values used when pH, urea, or lactate measurements were missing.
+
+## Analysis Framework
+
+The analysis compares two laboratory-imputation strategies within the same MIMIC-IV validation cohort:
+
+1. **Development-cohort median imputation**
+
+   Missing pH, urea, and lactate measurements are replaced using the predefined median values derived from the original model-development cohort.
+
+2. **MIMIC-IV 6-hour median imputation**
+
+   Missing pH, urea, and lactate measurements are replaced using the corresponding medians calculated from the observed MIMIC-IV laboratory measurements available within the first 6 hours following hospital admission.
+
+All patients are retained in both analyses. Patients with missing laboratory measurements are therefore not excluded from the sensitivity analysis. Observed laboratory values remain unchanged, and imputation is applied only when the corresponding predictor is missing.
+
+The following components are kept identical between the two analyses:
+
+- MIMIC-IV validation cohort
+- Composite cardiovascular outcome
+- Predictor definitions
+- Age
+- History of heart failure
+- History of atrial fibrillation
+- Observed pH measurements
+- Observed urea measurements
+- Observed lactate measurements
+- Original regression coefficients
+- Model intercept
+- Prediction equation
+- 6-hour laboratory extraction window
+
+The only analytical difference between the two strategies is the set of values used to replace missing pH, urea, and lactate measurements.
+
+No model refitting, coefficient updating, or dataset-specific optimisation is performed.
+
+## Performance Assessment
+
+Model performance under the two imputation strategies is compared using complementary measures of discrimination, overall prediction error, calibration, clinical utility, and risk stratification.
+
+The script automatically calculates and exports:
+
+- Area under the receiver operating characteristic curve (AUC)
+- Bootstrap-derived 95% confidence intervals for the AUC
+- Brier score
+- Calibration intercept
+- Calibration slope
+- LOWESS-smoothed calibration curves
+- Decision-curve analysis across threshold probabilities from 0.10 to 0.50
+- Net-benefit estimates with bootstrap confidence intervals
+- Observed cardiovascular-event rates across predicted-risk quartiles
+- Wilson 95% confidence intervals for quartile-specific event rates
+
+Both imputation strategies are displayed together in the graphical outputs to allow direct comparison of their predictive performance.
+
+## Generated Figures
+
+The script generates four individual comparison figures:
+
+1. `figure_imputation_sensitivity_roc_6h.png`
+2. `figure_imputation_sensitivity_dca_6h.png`
+3. `figure_imputation_sensitivity_calibration_6h.png`
+4. `figure_imputation_sensitivity_quartiles_6h.png`
+
+These are additionally combined into a four-panel composite figure:
+
+5. `MIMIC_IV_Imputation_Sensitivity_Composite_6h.png`
+
+The composite figure contains:
+
+- **Panel A:** receiver operating characteristic curves
+- **Panel B:** decision-curve analysis
+- **Panel C:** calibration curves
+- **Panel D:** observed cardiovascular-event rates across predicted-risk quartiles
+
+## Additional Output Files
+
+The script also generates the following structured outputs:
+
+1. `imputation_sensitivity_performance_6h.csv`
+2. `imputation_sensitivity_values_6h.csv`
+3. `imputation_sensitivity_lab_availability_6h.csv`
+4. `imputation_sensitivity_calibration_6h.csv`
+5. `imputation_sensitivity_decision_curve_6h.csv`
+6. `imputation_sensitivity_quartiles_6h.csv`
+7. `imputation_sensitivity_patient_level_6h.csv`
+8. `MIMIC_IV_imputation_sensitivity_6h.xlsx`
+9. `imputation_sensitivity_summary_6h.json`
+
+The Excel workbook contains separate worksheets for overall performance, imputation values, laboratory availability, calibration, predicted-risk quartiles, and decision-curve analysis.
+
+The patient-level output preserves the original analysis variables and includes the predicted probabilities obtained under both imputation strategies, allowing independent verification and reproducibility of the sensitivity analysis.
+
+## Interpretation
+
+This analysis specifically evaluates the robustness of the MIMIC-IV external-validation results to the choice of fixed laboratory-imputation values. Similar performance between the development-cohort median strategy and the MIMIC-IV-specific median strategy would indicate that the observed predictive performance is not materially dependent on the particular values used to replace missing pH, urea, and lactate measurements.
+
+This sensitivity analysis does not remove the underlying limitation associated with incomplete laboratory availability in the external-validation cohort. It should therefore be interpreted as an assessment of robustness to the **choice of imputation values**, rather than as evidence that laboratory missingness itself is inconsequential.
+---
+
 # Notes
 
-The scripts apply a frozen prediction framework. The model coefficients, median-imputation values, and frozen calibration parameters are taken from the internal model artifacts and are not estimated using the MIMIC-IV validation data.
+The primary MIMIC-IV external-validation scripts apply the predefined prediction framework using the original model parameters and development-cohort median-imputation values.
+
+The additional 6-hour laboratory-imputation sensitivity analysis preserves the same cohort, outcome, predictor definitions, regression coefficients, and prediction equation while changing only the values used to replace missing pH, urea, and lactate measurements.
+
+The sensitivity analysis is intended to assess robustness to the choice of laboratory-imputation values and should not be interpreted as development of an alternative prediction model.
