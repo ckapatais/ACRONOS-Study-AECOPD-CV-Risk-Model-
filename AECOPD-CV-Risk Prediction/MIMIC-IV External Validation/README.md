@@ -273,6 +273,85 @@ This analysis specifically evaluates the robustness of the MIMIC-IV external-val
 This sensitivity analysis does not remove the underlying limitation associated with incomplete laboratory availability in the external-validation cohort. It should therefore be interpreted as an assessment of robustness to the **choice of imputation values**, rather than as evidence that laboratory missingness itself is inconsequential.
 ---
 
+---
+
+# MIMIC-IV Sensitivity Analysis: Confirmed Arterial pH
+
+## Script Name
+
+`mimiciv_arterial_ph_sensitivity_6h_github_zenodo.py`
+
+## Purpose
+
+This script provides the reproducible implementation of an additional MIMIC-IV sensitivity analysis evaluating whether model performance was materially affected by uncertainty regarding the specimen type of pH measurements used in the primary external-validation analysis.
+
+The original prediction model was developed using arterial pH. In the primary MIMIC-IV validation workflow, pH was extracted from structured laboratory records without requiring explicit confirmation that the corresponding blood-gas specimen was arterial.
+
+The sensitivity analysis therefore repeats the primary 6-hour MIMIC-IV prediction procedure while restricting observed pH measurements to those that can be explicitly linked to an arterial blood-gas specimen.
+
+The purpose of the analysis is to evaluate robustness to the pH specimen definition. It does not define a new prediction model and does not modify the original regression coefficients or prediction equation.
+
+## Analysis Framework
+
+The analysis uses the same MIMIC-IV external-validation cohort and preserves the following elements:
+
+- Patient cohort
+- Composite cardiovascular outcome
+- Age
+- History of heart failure
+- History of atrial fibrillation
+- Observed urea measurements
+- Observed lactate measurements
+- Original model intercept
+- Original regression coefficients
+- Original prediction equation
+- Development-cohort median-imputation values
+- Primary 6-hour laboratory window
+
+The only intended change is the definition of an observed pH measurement.
+
+## Arterial pH Identification
+
+Blood-gas pH measurements are obtained from the MIMIC-IV `labevents` table.
+
+The script uses:
+
+- pH item ID: `50820`
+- Blood-gas specimen item ID: `52033`
+
+pH measurements and specimen information are linked using the MIMIC-IV `specimen_id`.
+
+For each patient:
+
+1. Blood-gas records belonging to the predefined validation cohort are identified.
+2. pH and specimen records are linked through `specimen_id`.
+3. Measurements are restricted to the first 6 hours following hospital admission.
+4. Only pH measurements associated with a specimen label beginning with `ART` are classified as explicitly confirmed arterial measurements.
+5. When multiple qualifying arterial measurements are available, the earliest measurement is retained.
+6. When no explicitly confirmed arterial pH is available, the predefined development-cohort median pH is used.
+
+The development-cohort pH median is:
+
+- pH: 7.39
+
+Measurements that cannot be explicitly confirmed as arterial are not treated as observed arterial pH values in the sensitivity analysis.
+
+## MIMIC-IV Files Required
+
+The script requires access to the MIMIC-IV `hosp` module containing:
+
+- `admissions.csv` or `admissions.csv.gz`
+- `labevents.csv` or `labevents.csv.gz`
+
+The path supplied through `--mimic-root` should identify the MIMIC-IV root directory containing the `hosp` folder.
+
+Example structure:
+
+```text
+mimic-iv-3.1/
+    hosp/
+        admissions.csv.gz
+        labevents.csv.gz
 # Notes
 
 The primary MIMIC-IV external-validation scripts apply the predefined prediction framework using the original model parameters and development-cohort median-imputation values.
